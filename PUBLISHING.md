@@ -1,203 +1,188 @@
 # NIMGEN - Guia de Publicação
 
-Este guia contém todos os passos necessários para publicar o NIMGEN.
+## ✅ STATUS: PRONTO PARA PUBLICAÇÃO
 
-## ✅ Checklist Pré-Publicação
+Todos os arquivos estão preparados. Siga os comandos abaixo em ordem.
 
-- [x] Build TypeScript compilado (`dist/`)
-- [x] package.json configurado corretamente
-- [x] .gitignore configurado (sem ignorar `dist/`)
-- [x] .npmignore configurado
-- [x] LICENSE (Apache-2.0)
-- [x] README.md com badges
-- [x] CHANGELOG.md
-- [x] CONTRIBUTING.md
-- [x] CODE_OF_CONDUCT.md
-- [x] SECURITY.md
-- [x] GitHub issue templates
-- [x] PR template
-- [x] Commit inicial criado
-- [x] npm audit limpo (0 vulnerabilidades)
-- [x] Nome disponível no npm
+---
 
-## 📦 Passo 1: Criar Repositório GitHub
+## 📋 PRÉ-REQUISITOS CONFIRMADOS
 
-### Opção A: Via GitHub Web UI
+- ✅ npm autenticado como: `gabrielferraresi`
+- ✅ Nome `nimgen` disponível no npm
+- ✅ Repositório GitHub: `https://github.com/gabriel-ferraresi/NIMGEN`
+- ✅ Build compilado em `dist/`
+- ✅ Git inicializado com 3 commits
 
-1. Acesse https://github.com/new
-2. Configure:
-   - **Repository name**: `NIMGEN`
-   - **Description**: `First MCP server for NVIDIA NIM FLUX — Generate and edit images using FLUX.1 models`
-   - **Visibility**: Public
-   - **NÃO inicializar** com README/gitignore/license (já temos)
-3. Clique "Create repository"
-4. Siga as instruções "push an existing repository"
+---
 
-### Opção B: Via GitHub CLI (se instalado)
+## 🚀 COMANDOS PARA PUBLICAÇÃO
 
-```bash
-gh repo create NIMGEN --public --description "First MCP server for NVIDIA NIM FLUX" --source=. --remote=origin --push
-```
+### ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+### ┃ PASSO 1: CRIAR REPOSITÓRIO NO GITHUB                          ┃
+### ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-### Após criar o repositório:
+⚠️ AÇÃO MANUAL NECESSÁRIA:
 
-```bash
-# Adicionar remote (se não usado gh CLI)
+1. Acesse: https://github.com/new
+2. Preencha:
+   - Repository name: NIMGEN
+   - Description: First MCP server for NVIDIA NIM FLUX — Generate and edit images using FLUX.1 models
+   - Visibility: ✅ Public
+   - ❌ NÃO marque "Add a README file"
+   - ❌ NÃO marque "Add .gitignore"
+   - ❌ NÃO marque "Choose a license"
+3. Clique em "Create repository"
+4. ANOTE a URL do repositório (deve ser): https://github.com/gabriel-ferraresi/NIMGEN
+
+---
+
+### ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+### ┃ PASSO 2: ENVIAR CÓDIGO PARA O GITHUB                           ┃
+### ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Execute os comandos abaixo NA PASTA DO PROJETO:
+
+```powershell
+# Adicionar remote
 git remote add origin https://github.com/gabriel-ferraresi/NIMGEN.git
 
-# Push do código
+# Renomear branch para main
 git branch -M main
+
+# Enviar código
 git push -u origin main
 
-# Criar tag de release
-git tag -a v1.0.0 -m "Release v1.0.0 - First MCP server for NVIDIA NIM FLUX"
+# Criar tag de versão
+git tag v1.0.0
+
+# Enviar tag
 git push origin v1.0.0
-```
-
-## 📤 Passo 2: Publicar no npm
-
-### Pré-requisitos
-
-Você já está autenticado: `npm whoami` retorna `gabrielferraresi` ✓
-
-### Comandos de publicação
-
-```bash
-# Verificar o que será publicado
-npm pack --dry-run
-
-# Publicar (access=public porque é scoped ou nome simples)
-npm publish --access public
-
-# Verificar publicação
-npm view nimgen
-```
-
-### Se o nome já existir (unlikely):
-
-```bash
-# Alternativa: usar scoped package
-# Mudar name em package.json para: @gabrielferraresi/nimgen
-npm publish --access public
-```
-
-## 🏷️ Passo 3: Criar Release no GitHub
-
-1. Acesse https://github.com/gabriel-ferraresi/NIMGEN/releases/new
-2. Selecione a tag `v1.0.0`
-3. Título: `v1.0.0 - First MCP Server for NVIDIA NIM FLUX`
-4. Descrição (copiar do CHANGELOG.md):
-   ```markdown
-   ## [1.0.0] - 2026-04-03
-
-   ### Added
-   - **First release of NIMGEN** - First MCP server for NVIDIA NIM FLUX models
-   - `generate_image` tool for text-to-image generation
-   - Support for FLUX.1-dev (high quality)
-   - Support for FLUX.1-schnell (fast generation)
-   - `edit_image` tool for image editing via FLUX.1-Kontext
-   - `list_models` tool to display available FLUX models
-   - Environment variable configuration
-   - Self-hosted NIM support
-   - Cross-platform support (Windows, Linux, macOS)
-   ```
-5. Marque "Set as the latest release"
-6. Clique "Publish release"
-
-## 📣 Passo 4: Divulgação
-
-### 4.1 Awesome MCP Servers
-
-Adicionar em: https://github.com/punkpeye/awesome-mcp-servers
-
-Fazer PR adicionando:
-
-```markdown
-- [nimgen](https://github.com/gabriel-ferraresi/NIMGEN) - First MCP server for NVIDIA NIM FLUX image generation with support for FLUX.1-dev, FLUX.1-schnell, and FLUX.1-Kontext.
-```
-
-### 4.2 MCP Market
-
-Submeter em: https://mcpmarket.com/submit
-
-### 4.3 Model Context Protocol Discord
-
-Compartilhar em: https://discord.gg/modelcontextprotocol
-
-### 4.4 Reddit
-
-Postar em:
-- r/LocalLLaMA
-- r/MachineLearning
-- r/artificial
-
-### 4.5 Twitter/X
-
-Tweet template:
-
-```
-🎨 Excited to announce NIMGEN - the FIRST MCP server for NVIDIA NIM FLUX!
-
-✅ Use your existing NVIDIA API key
-✅ FLUX.1-dev, FLUX.1-schnell, FLUX.1-Kontext
-✅ Works with Claude, Cursor, OpenCode
-
-npm install -g nimgen
-
-#MCP #NVIDIA #FLUX #AI
-```
-
-## 🔄 Atualizações Futuras
-
-### Patch (1.0.1, 1.0.2)
-```bash
-npm version patch
-git push --follow-tags
-npm publish
-```
-
-### Minor (1.1.0)
-```bash
-npm version minor
-git push --follow-tags
-npm publish
-```
-
-### Major (2.0.0)
-```bash
-npm version major
-git push --follow-tags
-npm publish
-```
-
-## 📊 Badges para README
-
-Após publicação, estes badges funcionarão:
-
-```markdown
-[![npm version](https://img.shields.io/npm/v/nimgen?color=blue&label=npm)](https://www.npmjs.com/package/nimgen)
-[![GitHub stars](https://img.shields.io/github/stars/gabriel-ferraresi/NIMGEN?style=social)](https://github.com/gabriel-ferraresi/NIMGEN)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gabriel-ferraresi/NIMGEN/blob/main/LICENSE)
-```
-
-## ✅ Validação Final
-
-Após publicação, verificar:
-
-```bash
-# npm
-npm view nimgen
-npm info nimgen
-
-# GitHub
-gh repo view gabriel-ferraresi/NIMGEN
-
-# Teste de instalação
-npx nimgen --help
 ```
 
 ---
 
-**Status atual**: Pronto para publicação ✅
+### ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+### ┃ PASSO 3: PUBLICAR NO NPM                                       ┃
+### ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-**Próximo passo**: Criar repositório GitHub → Push → npm publish
+Execute os comandos abaixo:
+
+```powershell
+# Verificar o que será publicado (opcional, para conferir)
+npm pack --dry-run
+
+# PUBLICAR (este é o comando principal)
+npm publish --access public
+
+# Verificar se publicou corretamente
+npm view nimgen
+```
+
+---
+
+### ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+### ┃ PASSO 4: CRIAR RELEASE NO GITHUB                               ┃
+### ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+⚠️ AÇÃO MANUAL NECESSÁRIA:
+
+1. Acesse: https://github.com/gabriel-ferraresi/NIMGEN/releases/new
+2. Selecione a tag: `v1.0.0`
+3. Release title: `v1.0.0 - First MCP Server for NVIDIA NIM FLUX`
+4. Descrição (copie e cole):
+
+```markdown
+## 🎨 NIMGEN v1.0.0
+
+**First MCP server for NVIDIA NIM FLUX image generation**
+
+### ✨ Features
+
+- `generate_image` - Text-to-image with FLUX.1-dev and FLUX.1-schnell
+- `edit_image` - Image editing with FLUX.1-Kontext
+- `list_models` - Display available FLUX models
+
+### 🔑 Key Highlights
+
+- ✅ Uses your existing NVIDIA API key (no separate subscription)
+- ✅ Direct NVIDIA NIM API integration
+- ✅ Self-hosted NIM support
+- ✅ Works with Claude Desktop, Cursor, OpenCode, VS Code
+
+### 📦 Installation
+
+```bash
+npx nimgen
+```
+
+### 📚 Documentation
+
+- [README](https://github.com/gabriel-ferraresi/NIMGEN#readme)
+- [npm package](https://www.npmjs.com/package/nimgen)
+```
+
+5. Clique em "Publish release"
+
+---
+
+### ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+### ┃ PASSO 5: VERIFICAÇÃO FINAL                                      ┃
+### ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Execute para confirmar:
+
+```powershell
+# Verificar npm
+npm view nimgen version
+npm view nimgen description
+
+# Testar instalação global
+npx nimgen --version
+```
+
+---
+
+## 📣 DIVULGAÇÃO (OPCIONAL)
+
+Após publicação, divulgue em:
+
+1. **Awesome MCP Servers**: https://github.com/punkpeye/awesome-mcp-servers
+   - Abrir PR adicionando o NIMGEN na lista
+
+2. **MCP Market**: https://mcpmarket.com/submit
+   - Submeter o servidor
+
+3. **Twitter/X**:
+   ```
+   🎨 Excited to announce NIMGEN - the FIRST MCP server for NVIDIA NIM FLUX!
+   
+   ✅ Use your existing NVIDIA API key
+   ✅ FLUX.1-dev, FLUX.1-schnell, FLUX.1-Kontext
+   ✅ Works with Claude, Cursor, OpenCode
+   
+   npm install -g nimgen
+   
+   #MCP #NVIDIA #FLUX #AI
+   ```
+
+---
+
+## 📊 RESUMO DOS COMANDOS (COPE E COLE)
+
+```powershell
+# === GITHUB ===
+git remote add origin https://github.com/gabriel-ferraresi/NIMGEN.git
+git branch -M main
+git push -u origin main
+git tag v1.0.0
+git push origin v1.0.0
+
+# === NPM ===
+npm publish --access public
+npm view nimgen
+```
+
+---
+
+**🎉 Após executar tudo, o NIMGEN estará publicado!**
