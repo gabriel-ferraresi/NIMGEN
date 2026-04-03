@@ -1,8 +1,8 @@
-# Source files (only dist is published)
+# Development files - DO NOT PUBLISH
 src/
 tsconfig.json
 
-# Development
+# Git
 .gitignore
 .git/
 
@@ -34,3 +34,5 @@ tests/
 *.test.ts
 *.spec.ts
 
+# Internal documentation (for maintainers only)
+PUBLISHING.md
