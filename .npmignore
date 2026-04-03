@@ -1,0 +1,36 @@
+# Source files (only dist is published)
+src/
+tsconfig.json
+
+# Development
+.gitignore
+.git/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Output
+nimgen-output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test files
+test/
+tests/
+*.test.ts
+*.spec.ts
+

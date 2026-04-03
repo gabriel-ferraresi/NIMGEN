@@ -1,0 +1,61 @@
+{
+  "name": "nimgen",
+  "version": "1.0.0",
+  "description": "First MCP server for NVIDIA NIM FLUX — Generate and edit images using FLUX.1 models with your existing NVIDIA API key. No extra subscriptions needed.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "nvidia",
+    "nim",
+    "flux",
+    "flux-1",
+    "image-generation",
+    "text-to-image",
+    "image-editing",
+    "ai-art",
+    "claude",
+    "cursor",
+    "opencode"
+  ],
+  "author": {
+    "name": "Gabriel Ferraresi",
+    "email": "gabriel@tech86.com",
+    "url": "https://www.tech86.com.br"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "nimgen": "dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabriel-ferraresi/NIMGEN.git"
+  },
+  "homepage": "https://github.com/gabriel-ferraresi/NIMGEN#readme",
+  "bugs": {
+    "url": "https://github.com/gabriel-ferraresi/NIMGEN/issues"
+  }
+}
