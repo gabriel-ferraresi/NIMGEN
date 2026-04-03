@@ -44,6 +44,13 @@ if (!NVIDIA_API_KEY) {
   process.exit(1);
 }
 
+// Validate API key format
+if (!NVIDIA_API_KEY.startsWith("nvapi-")) {
+  console.error("❌ NIMGEN: Invalid NVIDIA_API_KEY format.");
+  console.error(" Key must start with 'nvapi-'. Get a valid key at: https://build.nvidia.com");
+  process.exit(1);
+}
+
 // ─── Model Registry ─────────────────────────────────────────────────
 
 interface NimagenModel {
@@ -66,17 +73,17 @@ const MODELS: Record<string, NimagenModel> = {
     maxSteps: 50,
     defaultSteps: 20,
     supportsCfg: true,
-    supportsAspectRatio: false,
+    supportsAspectRatio: true,
   },
   "flux-1-schnell": {
-    id: "black-forest-labs/flux.1-schnell",
+    id: "black-forest-labs/flux_1-schnell",
     name: "FLUX.1 Schnell",
     description: "Fast text-to-image generation. Best for quick prototyping and drafts.",
     type: "text-to-image",
     maxSteps: 4,
     defaultSteps: 4,
     supportsCfg: false,
-    supportsAspectRatio: false,
+    supportsAspectRatio: true,
   },
   "flux-1-kontext": {
     id: "black-forest-labs/flux.1-kontext-dev",
@@ -86,7 +93,7 @@ const MODELS: Record<string, NimagenModel> = {
     maxSteps: 30,
     defaultSteps: 20,
     supportsCfg: true,
-    supportsAspectRatio: false,
+    supportsAspectRatio: true,
   },
 };
 
@@ -195,9 +202,72 @@ async function saveImage(base64Data: string, prefix: string): Promise<string> {
   return filepath;
 }
 
+// ─── Constants for validation ───────────────────────────────────────
+
+const MAX_PROMPT_LENGTH = 2000;
+const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB
+
+const IMAGE_MAGIC_NUMBERS: Record<string, number[]> = {
+  png: [0x89, 0x50, 0x4e, 0x47],
+  jpeg: [0xff, 0xd8, 0xff],
+  webp: [0x52, 0x49, 0x46, 0x46],
+  gif: [0x47, 0x49, 0x46, 0x38],
+};
+
+function validateImageMagic(buffer: Buffer): boolean {
+  for (const magic of Object.values(IMAGE_MAGIC_NUMBERS)) {
+    if (magic.every((byte, i) => buffer[i] === byte)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function loadImageAsBase64(imagePath: string): Promise<string> {
   const absolutePath = path.resolve(imagePath);
-  const buffer = await fs.readFile(absolutePath);
+
+  // Security: Prevent path traversal attacks
+  const allowedDirs = [OUTPUT_DIR, process.cwd()];
+  const isAllowed = allowedDirs.some(
+    (dir) => absolutePath.startsWith(path.resolve(dir)) || absolutePath === path.resolve(dir)
+  );
+
+  if (!isAllowed) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Access denied: path '${imagePath}' is outside allowed directories. ` +
+        `Allowed directories: ${allowedDirs.join(", ")}`
+    );
+  }
+
+  let buffer: Buffer;
+  try {
+    buffer = await fs.readFile(absolutePath);
+  } catch (error) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Could not read image at '${imagePath}'. ` +
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+
+  // Security: Check file size
+  if (buffer.length > MAX_IMAGE_SIZE) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Image too large: ${(buffer.length / 1024 / 1024).toFixed(2)}MB. ` +
+        `Maximum allowed: ${MAX_IMAGE_SIZE / 1024 / 1024}MB`
+    );
+  }
+
+  // Security: Validate image format using magic numbers
+  if (!validateImageMagic(buffer)) {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Invalid image format. Supported formats: PNG, JPEG, WebP, GIF`
+    );
+  }
+
   return buffer.toString("base64");
 }
 
@@ -206,7 +276,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 const server = new Server(
   {
     name: "nimgen",
-    version: "1.0.0",
+    version: "1.1.0",
   },
   {
     capabilities: {
@@ -336,37 +406,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   switch (name) {
-    // ── generate_image ────────────────────────────────────────────
-    case "generate_image": {
-      const genArgs = args as Record<string, unknown>;
-      const prompt = genArgs.prompt as string;
-      const model = (genArgs.model as string) ?? "flux-1-dev";
-      const aspect_ratio = (genArgs.aspect_ratio as string) ?? "1:1";
-      const steps = genArgs.steps as number | undefined;
-      const cfg_scale = (genArgs.cfg_scale as number) ?? 5;
-      const negative_prompt = genArgs.negative_prompt as string | undefined;
-      const seed = (genArgs.seed as number) ?? 0;
+// ── generate_image ────────────────────────────────────────────
+  case "generate_image": {
+  const genArgs = args as Record<string, unknown>;
+  const prompt = genArgs.prompt as string;
+  const model = (genArgs.model as string) ?? "flux-1-dev";
+  const aspect_ratio = (genArgs.aspect_ratio as string) ?? "1:1";
+  const steps = genArgs.steps as number | undefined;
+  const cfg_scale = (genArgs.cfg_scale as number) ?? 5;
+  const negative_prompt = genArgs.negative_prompt as string | undefined;
+  const seed = (genArgs.seed as number) ?? 0;
 
-      const modelInfo = MODELS[model];
-      if (!modelInfo) {
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Unknown model '${model}'. Available: ${Object.keys(MODELS).join(", ")}`
-        );
-      }
+  // Validate prompt length
+  if (prompt.length > MAX_PROMPT_LENGTH) {
+    throw new McpError(
+    ErrorCode.InvalidParams,
+    `Prompt too long: ${prompt.length} characters. Maximum: ${MAX_PROMPT_LENGTH}`
+    );
+  }
 
-      if (modelInfo.type !== "text-to-image") {
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Model '${model}' is for ${modelInfo.type}, not text-to-image. Use 'flux-1-dev' or 'flux-1-schnell'.`
-        );
-      }
+  const modelInfo = MODELS[model];
+  if (!modelInfo) {
+    throw new McpError(
+    ErrorCode.InvalidParams,
+    `Unknown model '${model}'. Available: ${Object.keys(MODELS).join(", ")}`
+    );
+  }
 
-      const inferenceSteps = steps ?? modelInfo.defaultSteps;
+  if (modelInfo.type !== "text-to-image") {
+    throw new McpError(
+    ErrorCode.InvalidParams,
+    `Model '${model}' is for ${modelInfo.type}, not text-to-image. Use 'flux-1-dev' or 'flux-1-schnell'.`
+    );
+  }
 
-      const payload: Record<string, unknown> = {
-        prompt,
-        seed,
+  const inferenceSteps = steps ?? modelInfo.defaultSteps;
+
+  const payload: Record<string, unknown> = {
+  prompt,
+  seed,
         steps: Math.min(inferenceSteps, modelInfo.maxSteps),
       };
 
@@ -382,38 +460,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         payload.negative_prompt = negative_prompt;
       }
 
-  try {
-    const base64 = await callNimApi(modelInfo.id, payload);
-    const filepath = await saveImage(base64, "nimgen");
+try {
+  const base64 = await callNimApi(modelInfo.id, payload);
+  const filepath = await saveImage(base64, "nimgen");
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: [
-            `✅ Image generated successfully!`,
-            ``,
-            `📁 **File:** ${filepath}`,
-            `🎨 **Model:** ${modelInfo.name}`,
-            `📐 **Aspect Ratio:** ${aspect_ratio}`,
-            `🔧 **Steps:** ${inferenceSteps}`,
-            `🌱 **Seed:** ${seed}`,
-            `💬 **Prompt:** ${prompt}`,
-          ].join("\n"),
-        },
-      ],
-    };
+  return {
+  content: [
+    {
+    type: "text",
+    text: [
+      `✅ Image generated successfully!`,
+      ``,
+      `📁 **File:** ${filepath}`,
+      `🎨 **Model:** ${modelInfo.name}`,
+      `📐 **Aspect Ratio:** ${aspect_ratio}`,
+      `🔧 **Steps:** ${inferenceSteps}`,
+      `🌱 **Seed:** ${seed}`,
+      `💬 **Prompt:** ${prompt}`,
+    ].join("\\n"),
+    },
+  ],
+  };
   } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text", text: `❌ Generation failed: ${message}` }],
-          isError: true,
-        };
-      }
-    }
+  const message = error instanceof Error ? error.message : String(error);
+  // Provide helpful error messages
+  let helpfulMessage = `❌ Generation failed: ${message}`;
+  if (message.includes("401") || message.includes("Unauthorized") || message.includes("Invalid API key")) {
+    helpfulMessage = "❌ Generation failed: Invalid NVIDIA API key. Get a valid key at: https://build.nvidia.com";
+  } else if (message.includes("429") || message.includes("Rate limit")) {
+    helpfulMessage = "❌ Generation failed: Rate limit exceeded. Please wait a moment and try again.";
+  } else if (message.includes("500") || message.includes("502") || message.includes("503")) {
+    helpfulMessage = "❌ Generation failed: NVIDIA NIM service temporarily unavailable. Please try again later.";
+  }
+return {
+  content: [{ type: "text", text: helpfulMessage }],
+  isError: true,
+  };
+  }
+  }
 
-    // ── edit_image ────────────────────────────────────────────────
-    case "edit_image": {
+  // ── edit_image ────────────────────────────────────────────────
+  case "edit_image": {
       const rawArgs = args as Record<string, unknown>;
       const prompt = rawArgs.prompt as string;
       const image_path = rawArgs.image_path as string;
@@ -511,7 +598,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("🎨 NIMGEN MCP Server v1.0.0 started");
+  console.error("🎨 NIMGEN MCP Server v1.1.0 started");
   console.error(` Provider: NVIDIA NIM (${BASE_URL})`);
   console.error(` Output: ${OUTPUT_DIR}`);
   console.error(` Models: ${Object.keys(MODELS).join(", ")}`);

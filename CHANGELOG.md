@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-03
+
+### Fixed
+- **Critical**: Corrected FLUX.1-schnell model ID from `flux.1-schnell` to `flux_1-schnell` (API compatibility)
+- **Critical**: Enabled `aspect_ratio` support for all FLUX models (was incorrectly disabled)
+- **Security**: Added path traversal validation in `edit_image` to prevent arbitrary file reads
+- **Security**: Added API key format validation (must start with `nvapi-`)
+
+### Added
+- **Security**: Image magic number validation (PNG, JPEG, WebP, GIF only)
+- **Security**: Maximum image size limit (50MB) for input files
+- **Security**: Maximum prompt length validation (2000 characters)
+- **UX**: Improved error messages with helpful suggestions for common issues
+- **Docs**: Comprehensive glossary explaining MCP, NIM, FLUX, and technical terms
+- **Docs**: Detailed FAQ section covering common questions
+- **Docs**: Complete troubleshooting guide with error table
+- **Docs**: Step-by-step guide for obtaining NVIDIA API key
+- **Docs**: Limitations section with rate limits and technical constraints
+
+### Changed
+- Error messages now provide actionable solutions instead of raw API errors
+- README restructured for better accessibility to new users
+
+### Security
+- Fixed path traversal vulnerability in `loadImageAsBase64`
+- Added input validation for all user-provided parameters
+- Restricted file access to allowed directories only
+
 ## [1.0.1] - 2026-04-03
 
 ### Changed
@@ -16,12 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **First release of NIMGEN** - First MCP server for NVIDIA NIM FLUX models
 - `generate_image` tool for text-to-image generation
-  - Support for FLUX.1-dev (high quality)
-  - Support for FLUX.1-schnell (fast generation)
-  - Configurable steps, cfg_scale, seed, negative_prompt
+- Support for FLUX.1-dev (high quality)
+- Support for FLUX.1-schnell (fast generation)
+- Configurable steps, cfg_scale, seed, negative_prompt
 - `edit_image` tool for image editing via FLUX.1-Kontext
-  - Contextual image editing with text instructions
-  - Support for image path input
+- Contextual image editing with text instructions
+- Support for image path input
 - `list_models` tool to display available FLUX models
 - Environment variable configuration:
   - `NVIDIA_API_KEY` (required)
@@ -52,17 +80,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Future Roadmap
 
-### [1.1.0] - Planned
+### [1.2.0] - Planned
 - FLUX.2 models support when available on NIM
 - Image upscaling capabilities
 - Batch generation support
 - Progress callbacks for long generations
 
-### [1.2.0] - Planned
+### [1.3.0] - Planned
 - Image-to-image with multiple input formats
 - Style presets for common use cases
 - Integration tests suite
+- Performance benchmarks
 
 ---
 
+[1.1.0]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gabriel-ferraresi/NIMGEN/releases/tag/v1.0.0

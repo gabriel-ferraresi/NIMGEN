@@ -33,6 +33,12 @@ if (!NVIDIA_API_KEY) {
     console.error(" Get your key at: https://build.nvidia.com");
     process.exit(1);
 }
+// Validate API key format
+if (!NVIDIA_API_KEY.startsWith("nvapi-")) {
+    console.error("❌ NIMGEN: Invalid NVIDIA_API_KEY format.");
+    console.error(" Key must start with 'nvapi-'. Get a valid key at: https://build.nvidia.com");
+    process.exit(1);
+}
 const MODELS = {
     "flux-1-dev": {
         id: "black-forest-labs/flux.1-dev",
@@ -42,17 +48,17 @@ const MODELS = {
         maxSteps: 50,
         defaultSteps: 20,
         supportsCfg: true,
-        supportsAspectRatio: false,
+        supportsAspectRatio: true,
     },
     "flux-1-schnell": {
-        id: "black-forest-labs/flux.1-schnell",
+        id: "black-forest-labs/flux_1-schnell",
         name: "FLUX.1 Schnell",
         description: "Fast text-to-image generation. Best for quick prototyping and drafts.",
         type: "text-to-image",
         maxSteps: 4,
         defaultSteps: 4,
         supportsCfg: false,
-        supportsAspectRatio: false,
+        supportsAspectRatio: true,
     },
     "flux-1-kontext": {
         id: "black-forest-labs/flux.1-kontext-dev",
@@ -62,7 +68,7 @@ const MODELS = {
         maxSteps: 30,
         defaultSteps: 20,
         supportsCfg: true,
-        supportsAspectRatio: false,
+        supportsAspectRatio: true,
     },
 };
 const ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "9:21"];
@@ -123,15 +129,55 @@ async function saveImage(base64Data, prefix) {
     await fs.writeFile(filepath, buffer);
     return filepath;
 }
+// ─── Constants for validation ───────────────────────────────────────
+const MAX_PROMPT_LENGTH = 2000;
+const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB
+const IMAGE_MAGIC_NUMBERS = {
+    png: [0x89, 0x50, 0x4e, 0x47],
+    jpeg: [0xff, 0xd8, 0xff],
+    webp: [0x52, 0x49, 0x46, 0x46],
+    gif: [0x47, 0x49, 0x46, 0x38],
+};
+function validateImageMagic(buffer) {
+    for (const magic of Object.values(IMAGE_MAGIC_NUMBERS)) {
+        if (magic.every((byte, i) => buffer[i] === byte)) {
+            return true;
+        }
+    }
+    return false;
+}
 async function loadImageAsBase64(imagePath) {
     const absolutePath = path.resolve(imagePath);
-    const buffer = await fs.readFile(absolutePath);
+    // Security: Prevent path traversal attacks
+    const allowedDirs = [OUTPUT_DIR, process.cwd()];
+    const isAllowed = allowedDirs.some((dir) => absolutePath.startsWith(path.resolve(dir)) || absolutePath === path.resolve(dir));
+    if (!isAllowed) {
+        throw new McpError(ErrorCode.InvalidParams, `Access denied: path '${imagePath}' is outside allowed directories. ` +
+            `Allowed directories: ${allowedDirs.join(", ")}`);
+    }
+    let buffer;
+    try {
+        buffer = await fs.readFile(absolutePath);
+    }
+    catch (error) {
+        throw new McpError(ErrorCode.InvalidParams, `Could not read image at '${imagePath}'. ` +
+            `Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+    // Security: Check file size
+    if (buffer.length > MAX_IMAGE_SIZE) {
+        throw new McpError(ErrorCode.InvalidParams, `Image too large: ${(buffer.length / 1024 / 1024).toFixed(2)}MB. ` +
+            `Maximum allowed: ${MAX_IMAGE_SIZE / 1024 / 1024}MB`);
+    }
+    // Security: Validate image format using magic numbers
+    if (!validateImageMagic(buffer)) {
+        throw new McpError(ErrorCode.InvalidParams, `Invalid image format. Supported formats: PNG, JPEG, WebP, GIF`);
+    }
     return buffer.toString("base64");
 }
 // ─── MCP Server ─────────────────────────────────────────────────────
 const server = new Server({
     name: "nimgen",
-    version: "1.0.0",
+    version: "1.1.0",
 }, {
     capabilities: {
         tools: {},
@@ -252,6 +298,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const cfg_scale = genArgs.cfg_scale ?? 5;
             const negative_prompt = genArgs.negative_prompt;
             const seed = genArgs.seed ?? 0;
+            // Validate prompt length
+            if (prompt.length > MAX_PROMPT_LENGTH) {
+                throw new McpError(ErrorCode.InvalidParams, `Prompt too long: ${prompt.length} characters. Maximum: ${MAX_PROMPT_LENGTH}`);
+            }
             const modelInfo = MODELS[model];
             if (!modelInfo) {
                 throw new McpError(ErrorCode.InvalidParams, `Unknown model '${model}'. Available: ${Object.keys(MODELS).join(", ")}`);
@@ -290,15 +340,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                                 `🔧 **Steps:** ${inferenceSteps}`,
                                 `🌱 **Seed:** ${seed}`,
                                 `💬 **Prompt:** ${prompt}`,
-                            ].join("\n"),
+                            ].join("\\n"),
                         },
                     ],
                 };
             }
             catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
+                // Provide helpful error messages
+                let helpfulMessage = `❌ Generation failed: ${message}`;
+                if (message.includes("401") || message.includes("Unauthorized") || message.includes("Invalid API key")) {
+                    helpfulMessage = "❌ Generation failed: Invalid NVIDIA API key. Get a valid key at: https://build.nvidia.com";
+                }
+                else if (message.includes("429") || message.includes("Rate limit")) {
+                    helpfulMessage = "❌ Generation failed: Rate limit exceeded. Please wait a moment and try again.";
+                }
+                else if (message.includes("500") || message.includes("502") || message.includes("503")) {
+                    helpfulMessage = "❌ Generation failed: NVIDIA NIM service temporarily unavailable. Please try again later.";
+                }
                 return {
-                    content: [{ type: "text", text: `❌ Generation failed: ${message}` }],
+                    content: [{ type: "text", text: helpfulMessage }],
                     isError: true,
                 };
             }
@@ -387,7 +448,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("🎨 NIMGEN MCP Server v1.0.0 started");
+    console.error("🎨 NIMGEN MCP Server v1.1.0 started");
     console.error(` Provider: NVIDIA NIM (${BASE_URL})`);
     console.error(` Output: ${OUTPUT_DIR}`);
     console.error(` Models: ${Object.keys(MODELS).join(", ")}`);
