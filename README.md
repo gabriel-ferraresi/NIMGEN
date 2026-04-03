@@ -10,7 +10,7 @@ No extra subscriptions. No separate API keys. Just NIM.
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/nimgen"><img src="https://img.shields.io/npm/v/nimgen?color=blue&label=npm" alt="npm version"></a>
+<a href="https://www.npmjs.com/package/nimgen"><img src="https://img.shields.io/npm/v/nimgen.svg?color=blue&label=npm" alt="npm version"></a>
 <a href="https://github.com/gabriel-ferraresi/NIMGEN/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
 <a href="https://build.nvidia.com"><img src="https://img.shields.io/badge/Powered%20by-NVIDIA%20NIM-76B900?logo=nvidia" alt="NVIDIA NIM"></a>
 </p>
