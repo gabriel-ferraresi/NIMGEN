@@ -37,7 +37,7 @@ when an individual is representing the project or its community.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at gabriel@tech86.com. All
+reported by contacting the project team at gabriel@tech86.com.br. All
 complaints will be reviewed and investigated.
 
 ## Attribution

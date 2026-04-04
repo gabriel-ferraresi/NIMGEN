@@ -85,6 +85,6 @@ node dist/index.js
 
 ## Questions?
 
-Feel free to open an issue or email gabriel@tech86.com
+Feel free to open an issue or email gabriel@tech86.com.br
 
 Thank you for contributing! 🎨

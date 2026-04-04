@@ -147,7 +147,6 @@ New to AI image generation or MCP? Here's what the terms mean:
 | **cfg_scale** | Classifier-Free Guidance Scale — controls how closely the AI follows your prompt (1-20). Higher = more faithful, lower = more creative. Default: 5 |
 | **steps** | Number of inference iterations. More steps = better quality but slower. FLUX.1 Dev: 20-50, Schnell: 4 |
 | **seed** | A number that controls randomness. Same seed + same prompt = same image every time. Use 0 for random |
-| **aspect_ratio** | The width-to-height ratio of the output image (e.g., 16:9 for widescreen, 1:1 for square) |
 | **negative_prompt** | Things to exclude from the image (e.g., "blurry, low quality, watermark") |
 
 ---
@@ -162,7 +161,6 @@ Generate an image from a text description using NVIDIA NIM FLUX models.
 |-----------|------|----------|---------|-------------|
 | `prompt` | string | ✅ | — | Text description of the image (max 2000 chars) |
 | `model` | string | — | `flux-1-dev` | Model: `flux-1-dev` or `flux-1-schnell` |
-| `aspect_ratio` | string | — | `1:1` | Ratio: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `21:9`, `9:21` |
 | `steps` | number | — | auto | Inference steps (more = better quality) |
 | `cfg_scale` | number | — | `5` | Prompt adherence (1-20) |
 | `negative_prompt` | string | — | — | Things to exclude |
@@ -246,7 +244,7 @@ When you hit rate limits, you'll see: `"Rate limit exceeded. Please wait a momen
 ```
 Generate an image: Professional tech company social media banner
 with gradient background from dark blue to purple, abstract
-geometric shapes, and clean modern aesthetic. Aspect ratio 16:9.
+geometric shapes, and clean modern aesthetic.
 ```
 
 ### Product Mockup
@@ -269,7 +267,7 @@ line work, photorealistic skin texture.
 ```
 Generate an image: Futuristic data center with rows of
 glowing server racks, blue and green LED lighting,
-cinematic perspective, ultra-wide aspect ratio 21:9.
+cinematic perspective.
 ```
 
 ---

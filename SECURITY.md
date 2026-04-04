@@ -14,7 +14,7 @@ We take security seriously. If you discover a vulnerability, please report it re
 
 **DO NOT** open a public GitHub issue for security vulnerabilities.
 
-Instead, please email: **gabriel@tech86.com**
+Instead, please email: **gabriel@tech86.com.br**
 
 Include:
 - Description of the vulnerability

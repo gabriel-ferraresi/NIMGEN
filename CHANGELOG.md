@@ -2,14 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepchangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.1] - 2026-04-03
+
+### Fixed
+- **Critical**: Removed `aspect_ratio` parameter - NVIDIA NIM API does not support this parameter
+  - This was causing 422 API errors on all image generation requests
+  - Removed from all model configurations, input schema, and response output
+- Corrected email address from `gabriel@tech86.com` to `gabriel@tech86.com.br` in all project files
+
+### Removed
+- `supportsAspectRatio` property from model interface
+- `ASPECT_RATIOS` constant and `AspectRatio` type
+- `aspect_ratio` from tool parameters
 
 ## [1.1.0] - 2026-04-03
 
 ### Fixed
 - **Critical**: Corrected FLUX.1-schnell model ID from `flux.1-schnell` to `flux_1-schnell` (API compatibility)
-- **Critical**: Enabled `aspect_ratio` support for all FLUX models (was incorrectly disabled)
 - **Security**: Added path traversal validation in `edit_image` to prevent arbitrary file reads
 - **Security**: Added API key format validation (must start with `nvapi-`)
 
@@ -94,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.1]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gabriel-ferraresi/NIMGEN/releases/tag/v1.0.0

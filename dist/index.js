@@ -48,7 +48,6 @@ const MODELS = {
         maxSteps: 50,
         defaultSteps: 20,
         supportsCfg: true,
-        supportsAspectRatio: true,
     },
     "flux-1-schnell": {
         id: "black-forest-labs/flux_1-schnell",
@@ -58,7 +57,6 @@ const MODELS = {
         maxSteps: 4,
         defaultSteps: 4,
         supportsCfg: false,
-        supportsAspectRatio: true,
     },
     "flux-1-kontext": {
         id: "black-forest-labs/flux.1-kontext-dev",
@@ -68,10 +66,8 @@ const MODELS = {
         maxSteps: 30,
         defaultSteps: 20,
         supportsCfg: true,
-        supportsAspectRatio: true,
     },
 };
-const ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "9:21"];
 async function callNimApi(modelId, payload) {
     const url = `${BASE_URL}/${modelId}`;
     const response = await fetch(url, {
@@ -177,7 +173,7 @@ async function loadImageAsBase64(imagePath) {
 // ─── MCP Server ─────────────────────────────────────────────────────
 const server = new Server({
     name: "nimgen",
-    version: "1.1.0",
+    version: "1.1.1",
 }, {
     capabilities: {
         tools: {},
@@ -206,13 +202,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
                         default: "flux-1-dev",
                         description: "Model to use. 'flux-1-dev' = high quality (30 steps), " +
                             "'flux-1-schnell' = fast (4 steps).",
-                    },
-                    aspect_ratio: {
-                        type: "string",
-                        enum: ASPECT_RATIOS,
-                        default: "1:1",
-                        description: "Aspect ratio of the output image. " +
-                            "Common: '1:1' (square), '16:9' (landscape), '9:16' (portrait/stories).",
                     },
                     steps: {
                         type: "number",
@@ -293,7 +282,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const genArgs = args;
             const prompt = genArgs.prompt;
             const model = genArgs.model ?? "flux-1-dev";
-            const aspect_ratio = genArgs.aspect_ratio ?? "1:1";
             const steps = genArgs.steps;
             const cfg_scale = genArgs.cfg_scale ?? 5;
             const negative_prompt = genArgs.negative_prompt;
@@ -318,9 +306,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             if (modelInfo.supportsCfg) {
                 payload.cfg_scale = cfg_scale;
             }
-            if (modelInfo.supportsAspectRatio) {
-                payload.aspect_ratio = aspect_ratio;
-            }
             if (negative_prompt && modelInfo.supportsCfg) {
                 payload.negative_prompt = negative_prompt;
             }
@@ -336,7 +321,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                                 ``,
                                 `📁 **File:** ${filepath}`,
                                 `🎨 **Model:** ${modelInfo.name}`,
-                                `📐 **Aspect Ratio:** ${aspect_ratio}`,
                                 `🔧 **Steps:** ${inferenceSteps}`,
                                 `🌱 **Seed:** ${seed}`,
                                 `💬 **Prompt:** ${prompt}`,
@@ -448,7 +432,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("🎨 NIMGEN MCP Server v1.1.0 started");
+    console.error("🎨 NIMGEN MCP Server v1.1.1 started");
     console.error(` Provider: NVIDIA NIM (${BASE_URL})`);
     console.error(` Output: ${OUTPUT_DIR}`);
     console.error(` Models: ${Object.keys(MODELS).join(", ")}`);

@@ -61,7 +61,6 @@ interface NimagenModel {
   maxSteps: number;
   defaultSteps: number;
   supportsCfg: boolean;
-  supportsAspectRatio: boolean;
 }
 
 const MODELS: Record<string, NimagenModel> = {
@@ -73,7 +72,6 @@ const MODELS: Record<string, NimagenModel> = {
     maxSteps: 50,
     defaultSteps: 20,
     supportsCfg: true,
-    supportsAspectRatio: true,
   },
   "flux-1-schnell": {
     id: "black-forest-labs/flux_1-schnell",
@@ -83,7 +81,6 @@ const MODELS: Record<string, NimagenModel> = {
     maxSteps: 4,
     defaultSteps: 4,
     supportsCfg: false,
-    supportsAspectRatio: true,
   },
   "flux-1-kontext": {
     id: "black-forest-labs/flux.1-kontext-dev",
@@ -93,21 +90,14 @@ const MODELS: Record<string, NimagenModel> = {
     maxSteps: 30,
     defaultSteps: 20,
     supportsCfg: true,
-    supportsAspectRatio: true,
   },
 };
-
-const ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "9:21"] as const;
-type AspectRatio = (typeof ASPECT_RATIOS)[number];
-
-// ─── NVIDIA NIM API Client ─────────────────────────────────────────
 
 interface GenerateRequest {
   prompt: string;
   model?: string;
   steps?: number;
   cfg_scale?: number;
-  aspect_ratio?: AspectRatio;
   seed?: number;
   negative_prompt?: string;
 }
@@ -276,7 +266,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 const server = new Server(
   {
     name: "nimgen",
-    version: "1.1.0",
+    version: "1.1.1",
   },
   {
     capabilities: {
@@ -307,21 +297,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           model: {
             type: "string",
-            enum: ["flux-1-dev", "flux-1-schnell"],
-            default: "flux-1-dev",
-            description:
-              "Model to use. 'flux-1-dev' = high quality (30 steps), " +
-              "'flux-1-schnell' = fast (4 steps).",
-          },
-          aspect_ratio: {
-            type: "string",
-            enum: ASPECT_RATIOS as unknown as string[],
-            default: "1:1",
-            description:
-              "Aspect ratio of the output image. " +
-              "Common: '1:1' (square), '16:9' (landscape), '9:16' (portrait/stories).",
-          },
-          steps: {
+enum: ["flux-1-dev", "flux-1-schnell"],
+    default: "flux-1-dev",
+    description:
+    "Model to use. 'flux-1-dev' = high quality (30 steps), " +
+    "'flux-1-schnell' = fast (4 steps).",
+    },
+    steps: {
             type: "number",
             description:
               "Number of inference steps. More steps = higher quality but slower. " +
@@ -411,7 +393,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const genArgs = args as Record<string, unknown>;
   const prompt = genArgs.prompt as string;
   const model = (genArgs.model as string) ?? "flux-1-dev";
-  const aspect_ratio = (genArgs.aspect_ratio as string) ?? "1:1";
   const steps = genArgs.steps as number | undefined;
   const cfg_scale = (genArgs.cfg_scale as number) ?? 5;
   const negative_prompt = genArgs.negative_prompt as string | undefined;
@@ -445,22 +426,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const payload: Record<string, unknown> = {
   prompt,
   seed,
-        steps: Math.min(inferenceSteps, modelInfo.maxSteps),
-      };
+steps: Math.min(inferenceSteps, modelInfo.maxSteps),
+  };
 
-      if (modelInfo.supportsCfg) {
-        payload.cfg_scale = cfg_scale;
-      }
+  if (modelInfo.supportsCfg) {
+  payload.cfg_scale = cfg_scale;
+  }
 
-      if (modelInfo.supportsAspectRatio) {
-        payload.aspect_ratio = aspect_ratio;
-      }
+  if (negative_prompt && modelInfo.supportsCfg) {
+  payload.negative_prompt = negative_prompt;
+  }
 
-      if (negative_prompt && modelInfo.supportsCfg) {
-        payload.negative_prompt = negative_prompt;
-      }
-
-try {
+  try {
   const base64 = await callNimApi(modelInfo.id, payload);
   const filepath = await saveImage(base64, "nimgen");
 
@@ -473,7 +450,6 @@ try {
       ``,
       `📁 **File:** ${filepath}`,
       `🎨 **Model:** ${modelInfo.name}`,
-      `📐 **Aspect Ratio:** ${aspect_ratio}`,
       `🔧 **Steps:** ${inferenceSteps}`,
       `🌱 **Seed:** ${seed}`,
       `💬 **Prompt:** ${prompt}`,
@@ -598,7 +574,7 @@ return {
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("🎨 NIMGEN MCP Server v1.1.0 started");
+  console.error("🎨 NIMGEN MCP Server v1.1.1 started");
   console.error(` Provider: NVIDIA NIM (${BASE_URL})`);
   console.error(` Output: ${OUTPUT_DIR}`);
   console.error(` Models: ${Object.keys(MODELS).join(", ")}`);
