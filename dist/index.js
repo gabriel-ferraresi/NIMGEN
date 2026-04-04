@@ -50,7 +50,7 @@ const MODELS = {
         supportsCfg: true,
     },
     "flux-1-schnell": {
-        id: "black-forest-labs/flux_1-schnell",
+        id: "black-forest-labs/flux.1-schnell",
         name: "FLUX.1 Schnell",
         description: "Fast text-to-image generation. Best for quick prototyping and drafts.",
         type: "text-to-image",
@@ -173,7 +173,7 @@ async function loadImageAsBase64(imagePath) {
 // ─── MCP Server ─────────────────────────────────────────────────────
 const server = new Server({
     name: "nimgen",
-    version: "1.1.1",
+    version: "1.1.3",
 }, {
     capabilities: {
         tools: {},
@@ -432,7 +432,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("🎨 NIMGEN MCP Server v1.1.1 started");
+    console.error("🎨 NIMGEN MCP Server v1.1.3 started");
     console.error(` Provider: NVIDIA NIM (${BASE_URL})`);
     console.error(` Output: ${OUTPUT_DIR}`);
     console.error(` Models: ${Object.keys(MODELS).join(", ")}`);

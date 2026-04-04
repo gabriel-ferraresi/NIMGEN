@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepchangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-04-03
+
+### Fixed
+- **Critical**: Reverted model IDs to use **period** (`.`) instead of underscore (`_`)
+  - `flux.1-dev` (NOT `flux_1-dev`) — the NVIDIA NIM **cloud API** uses periods
+  - `flux.1-schnell` (NOT `flux_1-schnell`)
+  - `flux.1-kontext-dev` (NOT `flux_1-kontext-dev`)
+- This fixes the 404 error caused by incorrect model ID format
+- **Important**: The underscore format is for **self-hosted NIM containers**, not the cloud API
+
 ## [1.1.1] - 2026-04-03
 
 ### Fixed
@@ -106,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.3]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.1.1...v1.1.3
 [1.1.1]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gabriel-ferraresi/NIMGEN/compare/v1.0.0...v1.0.1

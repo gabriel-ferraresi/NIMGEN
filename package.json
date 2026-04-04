@@ -1,6 +1,6 @@
 {
   "name": "nimgen",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "description": "First MCP server for NVIDIA NIM FLUX — Generate and edit images using FLUX.1 models with your existing NVIDIA API key. No extra subscriptions needed.",
   "keywords": [
     "mcp",
